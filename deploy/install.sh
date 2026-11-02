@@ -63,7 +63,33 @@ else
 fi
 
 log "Installing Python environment"
-python3 -m venv "$INSTALL_DIR/.venv"
+python_bin=""
+for candidate in python3.13 python3.12 python3; do
+  if command -v "$candidate" >/dev/null 2>&1 \
+    && "$candidate" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 12) else 1)' >/dev/null 2>&1; then
+    python_bin="$(command -v "$candidate")"
+    break
+  fi
+done
+
+if [[ -n "$python_bin" ]]; then
+  "$python_bin" -m venv "$INSTALL_DIR/.venv"
+else
+  log "Python 3.12+ not found; installing a uv-managed Python 3.12"
+  export PATH="$HOME/.local/bin:$PATH"
+  if ! command -v uv >/dev/null 2>&1; then
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    export PATH="$HOME/.local/bin:$PATH"
+  fi
+  command -v uv >/dev/null 2>&1 || die "failed to install uv"
+  if [[ "$(command -v uv)" != "/usr/local/bin/uv" ]]; then
+    install -m 0755 "$(command -v uv)" /usr/local/bin/uv
+  fi
+  export UV_PYTHON_INSTALL_DIR=/usr/local/share/uv/python
+  uv python install 3.12
+  uv venv --seed --python 3.12 "$INSTALL_DIR/.venv"
+fi
+
 "$INSTALL_DIR/.venv/bin/pip" install --quiet --upgrade pip wheel
 "$INSTALL_DIR/.venv/bin/pip" install --quiet --upgrade -e "$INSTALL_DIR"
 "$INSTALL_DIR/.venv/bin/pip" install --quiet --upgrade -r "$INSTALL_DIR/web/requirements.txt"

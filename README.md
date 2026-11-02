@@ -16,7 +16,7 @@ Some of the key features include:
 
 This fork adds a small web front end on top of the same Tikorgzo download engine. Paste a TikTok link in the browser, and the server downloads the highest-quality file with the `tikwm` extractor. The library at the bottom lists every downloaded video with a thumbnail, file size, and a per-file download button.
 
-It is designed for a Debian/Ubuntu LXC container on Proxmox (or any Debian/Ubuntu VM). One line installs all dependencies (Python, Chrome, Xvfb, ffmpeg), clones this repo, and registers a systemd service that starts on boot:
+It is designed for a Debian 12/13 or Ubuntu 22.04+ LXC container on Proxmox (or any Debian/Ubuntu VM). One line installs all dependencies (Python, Chrome, Xvfb, ffmpeg), clones this repo, and registers a systemd service that starts on boot:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/itscolinbrophy/Tikorgzo/main/deploy/install.sh | sudo bash
