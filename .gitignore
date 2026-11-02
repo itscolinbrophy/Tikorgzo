@@ -24,3 +24,6 @@ _version.py
 
 # User-specific files
 tikorgzo.conf
+
+# Web UI local data
+data/

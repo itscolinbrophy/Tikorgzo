@@ -1,6 +1,8 @@
 
 
 import asyncio
+import os
+import shlex
 
 from playwright.async_api import Browser, BrowserContext, Page, Playwright, ProxySettings, async_playwright
 
@@ -33,15 +35,19 @@ class ScrapeBrowser:
         else:
             proxy = None
 
+        extra_chrome_args = shlex.split(os.environ.get("TIKORGZO_CHROME_ARGS", ""))
+        headless = os.environ.get("TIKORGZO_CHROME_HEADLESS", "").strip().lower() in {"1", "true", "yes", "on"}
+
         try:
             self._playwright = await async_playwright().start()
             self.context = await self._playwright.chromium.launch_persistent_context(
                 user_data_dir=CHROME_USER_DATA_DIR,
                 channel="chrome",
-                headless=False,
+                headless=headless,
                 accept_downloads=True,
                 args=[
                     "--disable-blink-features=AutomationControlled",
+                    *extra_chrome_args,
                 ],
                 viewport={"width": 500, "height": 200},
                 proxy=proxy,

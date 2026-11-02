@@ -12,6 +12,36 @@ Some of the key features include:
 - Use custom proxy
 - Config file support
 
+## Web UI (self-hosted)
+
+This fork adds a small web front end on top of the same Tikorgzo download engine. Paste a TikTok link in the browser, and the server downloads the highest-quality file with the `tikwm` extractor. The library at the bottom lists every downloaded video with a thumbnail, file size, and a per-file download button.
+
+It is designed for a Debian/Ubuntu LXC container on Proxmox (or any Debian/Ubuntu VM). One line installs all dependencies (Python, Chrome, Xvfb, ffmpeg), clones this repo, and registers a systemd service that starts on boot:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/itscolinbrophy/Tikorgzo/main/deploy/install.sh | sudo bash
+```
+
+Open `http://<container-ip>:8080` when it finishes.
+
+- **Update** to the latest commit from GitHub: `sudo tikorgzo-update`
+- **Data / videos:** `/var/lib/tikorgzo-web/downloads`
+- **Thumbnails and job logs:** `/var/lib/tikorgzo-web/.thumbnails` and `/var/lib/tikorgzo-web/.jobs`
+- **Service logs:** `journalctl -u tikorgzo-web -f`
+- **Port / user / paths:** edit `/etc/tikorgzo-web.env`, then `sudo systemctl restart tikorgzo-web`
+
+The web UI has no login. Keep it on your LAN, or put it behind a reverse proxy with authentication before exposing it.
+
+### Docker alternative
+
+If you prefer a container instead of a native LXC install:
+
+```bash
+docker compose up -d --build
+```
+
+The app listens on port `8080` and stores downloads in the `tikorgzo-data` volume. Change the port with `TIKORGZO_PORT=9000 docker compose up -d --build`.
+
 ## Why Tikorgzo?
 
 There are many TikTok video downloaders out there, but most of them usually download videos in 720p or 1080p quality. This is because they usually rely on the download links that is scrapable from the site itself, which is usually not the source video but a compressed version of it. You can use them if quality is not really much your concern. A very good open source example of this is [yt-dlp](https://github.com/yt-dlp/yt-dlp).
