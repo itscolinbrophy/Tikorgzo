@@ -96,6 +96,7 @@ function renderGallery(items, totalBytes) {
     const img = node.querySelector("img");
     const username = node.querySelector(".username");
     const badge = node.querySelector(".badge");
+    const deleteBtn = node.querySelector(".delete-btn");
     const meta = node.querySelector(".meta");
     const download = node.querySelector(".download-btn");
     const preview = node.querySelector(".preview-btn");
@@ -127,6 +128,7 @@ function renderGallery(items, totalBytes) {
     download.href = item.download_url;
     download.setAttribute("download", item.name);
     preview.href = item.stream_url;
+    deleteBtn.addEventListener("click", () => deleteVideo(item, node, deleteBtn));
 
     fragment.appendChild(node);
   }
@@ -137,6 +139,33 @@ function renderGallery(items, totalBytes) {
   countEl.textContent = count === 0 ? "No downloads yet" : `${count} video${count === 1 ? "" : "s"} · ${size}`;
   empty.hidden = count !== 0;
   gallery.hidden = count === 0;
+}
+
+async function deleteVideo(item, card, button) {
+  const label = item.username ? `@${item.username}` : item.name;
+  if (!window.confirm(`Delete ${label}? This cannot be undone.`)) return;
+
+  button.disabled = true;
+  button.classList.add("is-busy");
+  try {
+    const response = await fetch(item.stream_url, { method: "DELETE" });
+    let body = null;
+    try {
+      body = await response.json();
+    } catch (_) {
+      body = null;
+    }
+    if (!response.ok) {
+      throw new Error(body && body.detail ? body.detail : `Delete failed (${response.status})`);
+    }
+    card.remove();
+    await loadVideos({ silent: true });
+  } catch (error) {
+    setStatus(error.message, "error");
+  } finally {
+    button.disabled = false;
+    button.classList.remove("is-busy");
+  }
 }
 
 async function loadVideos({ silent = false } = {}) {

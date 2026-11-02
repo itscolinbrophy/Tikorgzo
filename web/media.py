@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import hashlib
 import re
 from dataclasses import dataclass
@@ -109,6 +110,22 @@ def resolve_media(settings: Settings, relpath: str) -> Path:
     if candidate.suffix.lower() not in VIDEO_EXTENSIONS:
         raise FileNotFoundError(relpath)
     return candidate
+
+
+def delete_video(settings: Settings, relpath: str) -> str:
+    source = resolve_media(settings, relpath)
+    rel = source.relative_to(settings.data_dir).as_posix()
+    thumbnail = settings.thumb_dir / f"{_item_id(rel)}.jpg"
+
+    source.unlink()
+    thumbnail.unlink(missing_ok=True)
+
+    parent = source.parent
+    if parent != settings.data_dir:
+        with contextlib.suppress(OSError):
+            parent.rmdir()
+
+    return rel
 
 
 def _is_fresh(target: Path, source: Path) -> bool:

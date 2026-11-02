@@ -14,7 +14,7 @@ Some of the key features include:
 
 ## Web UI (self-hosted)
 
-This fork adds a small web front end on top of the same Tikorgzo download engine. Paste a TikTok link in the browser, and the server downloads the highest-quality file with the `tikwm` extractor. The library at the bottom lists every downloaded video with a thumbnail, file size, and a per-file download button.
+This fork adds a small web front end on top of the same Tikorgzo download engine. Paste a TikTok link in the browser, and the server downloads the highest-quality file with the `tikwm` extractor. The library at the bottom lists every downloaded video with a thumbnail, file size, and per-file download and delete buttons.
 
 It is designed for a Debian 12/13 or Ubuntu 22.04+ LXC container on Proxmox (or any Debian/Ubuntu VM). One line installs all dependencies (Python, ffmpeg), clones this repo, and registers a systemd service that starts on boot:
 
@@ -27,6 +27,7 @@ Open `http://<container-ip>:8080` when it finishes.
 - **Update** to the latest commit from GitHub: `sudo tikorgzo-update`
 - **Data / videos:** `/var/lib/tikorgzo-web/downloads`
 - **Thumbnails and job logs:** `/var/lib/tikorgzo-web/.thumbnails` and `/var/lib/tikorgzo-web/.jobs`
+- **Delete a video:** click the trash icon on its card (removes the file and cached thumbnail)
 - **Service logs:** `journalctl -u tikorgzo-web -f`
 - **Port / user / paths:** edit `/etc/tikorgzo-web.env`, then `sudo systemctl restart tikorgzo-web`
 - **Extractor:** the default `tikwm` uses TikWM's JSON API (no browser/Cloudflare). If it is rate-limited, set `TIKORGZO_EXTRACTOR=direct` in `/etc/tikorgzo-web.env` and restart (faster, but may be lower quality)

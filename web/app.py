@@ -14,7 +14,7 @@ from pydantic import BaseModel, field_validator
 
 from .config import settings
 from .jobs import JobManager
-from .media import ensure_thumbnail, resolve_media, scan_videos
+from .media import delete_video, ensure_thumbnail, resolve_media, scan_videos
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator
@@ -144,3 +144,12 @@ async def media(relpath: str, download: Annotated[bool, Query()] = False) -> Fil
         media_type=media_type,
         headers={"Content-Disposition": f'{disposition}; filename="{safe_name}"'},
     )
+
+
+@app.delete("/api/media/{relpath:path}")
+async def delete_media(relpath: str) -> dict[str, str]:
+    try:
+        deleted = await asyncio.to_thread(delete_video, settings, relpath)
+    except (FileNotFoundError, ValueError):
+        raise HTTPException(status_code=404, detail="Video not found") from None
+    return {"deleted": deleted}
