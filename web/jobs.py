@@ -10,12 +10,18 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
+import aiohttp
+
+from tikorgzo.constants import BROWSER_USER_AGENT
+from tikorgzo.core.extractors.tikwm.constants import TIKWM_API_URL
+
 from .media import strip_ansi
 
 if TYPE_CHECKING:
     from .config import Settings
 
 MAX_JOBS = 100
+SHORT_LINK_RE = re.compile(r"https?://(?:vt|vm)\.tiktok\.com/", re.IGNORECASE)
 
 STAGE_PATTERNS = (
     ("Stage 1/3", "Validating link"),
@@ -144,6 +150,33 @@ class JobManager:
         command.extend(self.settings.extra_args)
         return command
 
+    async def _resolve_short_url(self, url: str) -> str:
+        if not SHORT_LINK_RE.search(url):
+            return url
+        try:
+            async with (
+                aiohttp.ClientSession(
+                    headers={
+                        "User-Agent": BROWSER_USER_AGENT,
+                        "Referer": "https://www.tikwm.com/",
+                    },
+                    timeout=aiohttp.ClientTimeout(total=30),
+                ) as session,
+                session.get(TIKWM_API_URL, params={"url": url}) as response,
+            ):
+                response.raise_for_status()
+                payload = await response.json()
+        except (aiohttp.ClientError, TimeoutError, ValueError):
+            return url
+
+        data = payload.get("data") if isinstance(payload, dict) else None
+        video_id = data.get("id") if isinstance(data, dict) else None
+        if not video_id:
+            return url
+
+        await asyncio.sleep(1.2)
+        return str(video_id)
+
     def _environment(self) -> dict[str, str]:
         env = os.environ.copy()
         env.setdefault("PYTHONUNBUFFERED", "1")
@@ -155,9 +188,14 @@ class JobManager:
     async def _execute(self, job: Job) -> None:
         async with self._semaphore:
             job.status = "running"
-            job.stage = "Starting"
+            job.stage = "Resolving link"
             job.started_at = _now()
             job.message = ""
+
+            resolved = await self._resolve_short_url(job.url)
+            if resolved != job.url:
+                job.url = resolved
+            job.stage = "Starting"
 
             self.settings.job_log_dir.mkdir(parents=True, exist_ok=True)
             log_path = self.settings.job_log_dir / f"{job.id}.log"
