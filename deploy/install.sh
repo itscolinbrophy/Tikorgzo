@@ -38,22 +38,7 @@ APT_OPTS=(
 log "Installing system dependencies (this can take a few minutes)"
 apt-get update "${APT_OPTS[@]}"
 apt-get install -y --no-install-recommends "${APT_OPTS[@]}" \
-  ca-certificates curl git python3 python3-venv python3-pip \
-  ffmpeg xvfb xauth wget gnupg fonts-liberation
-
-if ! command -v google-chrome >/dev/null 2>&1 && ! command -v google-chrome-stable >/dev/null 2>&1; then
-  log "Installing Google Chrome"
-  arch="$(dpkg --print-architecture)"
-  case "$arch" in
-    amd64) chrome_arch="amd64" ;;
-    arm64) chrome_arch="arm64" ;;
-    *) die "unsupported architecture: $arch" ;;
-  esac
-  tmp_dir="$(mktemp -d)"
-  trap 'rm -rf "$tmp_dir"' EXIT
-  wget -O "$tmp_dir/chrome.deb" "https://dl.google.com/linux/direct/google-chrome-stable_current_${chrome_arch}.deb"
-  apt-get install -y "${APT_OPTS[@]}" "$tmp_dir/chrome.deb"
-fi
+  ca-certificates curl git python3 python3-venv python3-pip ffmpeg
 
 log "Creating service user and data directories"
 if ! id -u "$SERVICE_USER" >/dev/null 2>&1; then
@@ -116,9 +101,7 @@ TIKORGZO_HOST="$HOST"
 TIKORGZO_INSTALL_DIR="$INSTALL_DIR"
 TIKORGZO_REPO_URL="$REPO_URL"
 TIKORGZO_BRANCH="$BRANCH"
-TIKORGZO_USE_XVFB=1
 TIKORGZO_MAX_CONCURRENT=1
-TIKORGZO_CHROME_ARGS="--no-sandbox --disable-dev-shm-usage --disable-gpu"
 EOF
   chmod 0644 "$ENV_FILE"
 else

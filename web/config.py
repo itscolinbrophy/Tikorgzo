@@ -6,15 +6,6 @@ import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
-TRUTHY = {"1", "true", "yes", "on"}
-
-
-def _env_bool(name: str, default: bool) -> bool:
-    raw = os.environ.get(name)
-    if raw is None:
-        return default
-    return raw.strip().lower() in TRUTHY
-
 
 def _env_int(name: str, default: int, minimum: int = 1, maximum: int = 16) -> int:
     raw = os.environ.get(name)
@@ -35,7 +26,6 @@ class Settings:
     job_log_dir: Path
     tikorgzo_bin: str
     extractor: str
-    use_xvfb: bool
     max_concurrent: int
     extra_args: tuple[str, ...]
     host: str
@@ -59,7 +49,6 @@ def _build_settings() -> Settings:
         job_log_dir=_dir("TIKORGZO_JOB_LOG_DIR", base_dir / ".jobs"),
         tikorgzo_bin=os.environ.get("TIKORGZO_BIN") or shutil.which("tikorgzo") or "tikorgzo",
         extractor=os.environ.get("TIKORGZO_EXTRACTOR", "tikwm").strip() or "tikwm",
-        use_xvfb=_env_bool("TIKORGZO_USE_XVFB", default=True),
         max_concurrent=_env_int("TIKORGZO_MAX_CONCURRENT", 1, 1, 8),
         extra_args=tuple(shlex.split(os.environ.get("TIKORGZO_EXTRA_ARGS", ""))),
         host=os.environ.get("TIKORGZO_HOST", "0.0.0.0"),

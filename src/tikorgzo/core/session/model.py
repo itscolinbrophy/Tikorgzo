@@ -1,7 +1,12 @@
 import aiohttp
 import requests
 
-from tikorgzo.constants import TIKWM_EXTRACTOR_NAME
+from tikorgzo.constants import BROWSER_USER_AGENT, TIKWM_EXTRACTOR_NAME
+
+REQUEST_HEADERS = {
+    "User-Agent": BROWSER_USER_AGENT,
+    "Referer": "https://www.tiktok.com/",
+}
 
 
 class ClientSessionManager:
@@ -21,9 +26,13 @@ class ClientSessionManager:
         """Get a requests Session or aiohttp ClientSession depending on the chosen link extractor."""
 
         if extractor == TIKWM_EXTRACTOR_NAME:
-            return aiohttp.ClientSession(proxy="https://" + proxy if proxy else None)
+            return aiohttp.ClientSession(
+                headers=REQUEST_HEADERS,
+                proxy="https://" + proxy if proxy else None,
+            )
 
         session = requests.Session()
+        session.headers.update(REQUEST_HEADERS)
         if proxy is not None:
             session.proxies.update({"http": proxy, "https": proxy})
         return session

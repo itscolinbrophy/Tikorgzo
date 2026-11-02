@@ -8,18 +8,13 @@ ENV DEBIAN_FRONTEND=noninteractive \
     TIKORGZO_DATA_DIR=/data/downloads \
     TIKORGZO_THUMB_DIR=/data/.thumbnails \
     TIKORGZO_JOB_LOG_DIR=/data/.jobs \
-    TIKORGZO_USE_XVFB=1 \
     TIKORGZO_MAX_CONCURRENT=1 \
-    TIKORGZO_CHROME_ARGS="--no-sandbox --disable-dev-shm-usage --disable-gpu" \
     TIKORGZO_BIN=/usr/local/bin/tikorgzo \
     HOME=/home/app
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        ca-certificates curl ffmpeg fonts-liberation gnupg wget xauth xvfb \
-    && wget -q -O /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
-    && apt-get install -y /tmp/chrome.deb \
-    && rm -rf /tmp/chrome.deb /var/lib/apt/lists/*
+    && apt-get install -y --no-install-recommends ca-certificates ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY . /app

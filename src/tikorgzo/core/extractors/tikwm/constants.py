@@ -1,3 +1,5 @@
+TIKWM_API_URL = r"https://www.tikwm.com/api/"
+API_REQUEST_TIMEOUT = 60
 TIKTOK_DOWNLOADER_URL = r"https://www.tikwm.com/originalDownloader.html"
 WEBPAGE_LOAD_TIMEOUT = 60000
 ELEMENT_LOAD_TIMEOUT = 45000

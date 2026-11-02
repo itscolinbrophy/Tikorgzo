@@ -4,7 +4,6 @@ import asyncio
 import contextlib
 import os
 import re
-import shutil
 import signal
 import uuid
 from dataclasses import dataclass, field
@@ -131,8 +130,6 @@ class JobManager:
 
     def _command(self, url: str) -> list[str]:
         command: list[str] = []
-        if self.settings.use_xvfb and shutil.which("xvfb-run"):
-            command.extend(["xvfb-run", "-a"])
         command.extend(
             [
                 self.settings.tikorgzo_bin,
