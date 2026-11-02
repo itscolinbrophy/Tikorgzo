@@ -29,6 +29,7 @@ Open `http://<container-ip>:8080` when it finishes.
 - **Thumbnails and job logs:** `/var/lib/tikorgzo-web/.thumbnails` and `/var/lib/tikorgzo-web/.jobs`
 - **Service logs:** `journalctl -u tikorgzo-web -f`
 - **Port / user / paths:** edit `/etc/tikorgzo-web.env`, then `sudo systemctl restart tikorgzo-web`
+- **Cloudflare fallback:** if TikWM is blocked, set `TIKORGZO_EXTRACTOR=direct` in `/etc/tikorgzo-web.env` and restart (faster, but may be lower quality)
 
 The web UI has no login. Keep it on your LAN, or put it behind a reverse proxy with authentication before exposing it.
 
