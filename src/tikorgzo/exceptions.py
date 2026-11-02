@@ -57,6 +57,14 @@ class InvalidVideoLinkError(Exception):
         super().__init__(self.message)
 
 
+class VideoLinkResolutionError(Exception):
+    """Raised when a shortened TikTok link cannot be resolved."""
+
+    def __init__(self, video_link: str) -> None:
+        self.message = f"Could not resolve the shortened link '{video_link}'. Check the container's DNS/network and try again."
+        super().__init__(self.message)
+
+
 class InvalidDateFormatError(Exception):
     """Raised when invalid date format is used."""
 

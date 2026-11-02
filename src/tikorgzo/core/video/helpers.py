@@ -7,9 +7,9 @@ from typing import TYPE_CHECKING
 import requests
 
 from tikorgzo.config.model import ConfigKey
-from tikorgzo.constants import DEFAULT_DATE_FORMAT, DOWNLOAD_PATH, TIKTOK_ID_LENGTH
+from tikorgzo.constants import BROWSER_USER_AGENT, DEFAULT_DATE_FORMAT, DOWNLOAD_PATH, TIKTOK_ID_LENGTH
 from tikorgzo.core.video.constants import IDEAL_BINARY_NUM_LEN, NORMAL_TIKTOK_VIDEO_LINK_REGEX, USERNAME_REGEX, VT_TIKTOK_VIDEO_LINK_REGEX
-from tikorgzo.exceptions import InvalidDateFormatError, InvalidVideoLinkError, VideoFileAlreadyExistsError, VideoIDExtractionError
+from tikorgzo.exceptions import InvalidDateFormatError, InvalidVideoLinkError, VideoFileAlreadyExistsError, VideoIDExtractionError, VideoLinkResolutionError
 
 if TYPE_CHECKING:
     from tikorgzo.core.video.model import Video
@@ -154,7 +154,17 @@ def _get_normalized_url(video_link: str, proxy: str | None = None) -> str:
     else:
         proxies = None
 
-    response = requests.get(video_link, allow_redirects=True, timeout=30, proxies=proxies)
+    try:
+        response = requests.get(
+            video_link,
+            allow_redirects=True,
+            timeout=30,
+            proxies=proxies,
+            headers={"User-Agent": BROWSER_USER_AGENT},
+        )
+    except requests.RequestException as e:
+        raise VideoLinkResolutionError(video_link) from e
+
     return response.url
 
 
