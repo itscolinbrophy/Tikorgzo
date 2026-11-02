@@ -79,12 +79,18 @@ class TikWMExtractor(BaseExtractor):
                 raise e  # noqa: TRY201
 
     async def _open_webpage(self, page: Page) -> None:
-        try:
-            await page.goto(TIKTOK_DOWNLOADER_URL, timeout=WEBPAGE_LOAD_TIMEOUT)
-            await page.wait_for_load_state("networkidle", timeout=WEBPAGE_LOAD_TIMEOUT)
-        except Exception:
-            msg = "Cannot load webpage due to timeout; the website may be slow."
-            raise ExtractionTimeoutError(msg) from None
+        last_error: Exception | None = None
+        for attempt in range(2):
+            try:
+                await page.goto(TIKTOK_DOWNLOADER_URL, timeout=WEBPAGE_LOAD_TIMEOUT, wait_until="load")
+                await page.wait_for_selector("input#params", state="visible", timeout=ELEMENT_LOAD_TIMEOUT)
+                return
+            except Exception as e:
+                last_error = e
+                if attempt == 0:
+                    await asyncio.sleep(2)
+        msg = "Cannot load webpage due to timeout; the website may be slow."
+        raise ExtractionTimeoutError(msg) from last_error
 
     async def _submit_link(self, page: Page, video_link: str) -> None:
         input_field_selector = "input#params"
