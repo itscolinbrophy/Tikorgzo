@@ -51,6 +51,9 @@ install -d -m 0755 -o "$SERVICE_USER" -g "$SERVICE_USER" \
 chown -R "$SERVICE_USER:$SERVICE_USER" "$DATA_ROOT"
 
 log "Fetching $REPO_URL"
+if [[ -d "$INSTALL_DIR" && ! -d "$INSTALL_DIR/.git" ]]; then
+  die "$INSTALL_DIR exists but is not a git checkout"
+fi
 if [[ -d "$INSTALL_DIR/.git" ]]; then
   git -C "$INSTALL_DIR" fetch --all --prune
   git -C "$INSTALL_DIR" checkout "$BRANCH"
@@ -128,7 +131,11 @@ EOF
 systemctl daemon-reload
 systemctl enable "$SERVICE_NAME" >/dev/null
 systemctl restart "$SERVICE_NAME"
-sleep 2
+
+for _ in $(seq 1 15); do
+  systemctl is-active --quiet "$SERVICE_NAME" && break
+  sleep 1
+done
 
 if ! systemctl is-active --quiet "$SERVICE_NAME"; then
   echo
