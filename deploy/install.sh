@@ -21,12 +21,25 @@ command -v apt-get >/dev/null 2>&1 || die "this installer supports Debian/Ubuntu
 command -v systemctl >/dev/null 2>&1 || die "systemd not found; use the Docker setup instead"
 
 export DEBIAN_FRONTEND=noninteractive
+export DEBCONF_NONINTERACTIVE_SEEN=true
+export APT_LISTCHANGES_FRONTEND=none
+export NEEDRESTART_MODE=a
+export TZ=UTC
 
-log "Installing system dependencies"
-apt-get update -qq
-apt-get install -y -qq \
+APT_OPTS=(
+  -o Acquire::ForceIPv4=true
+  -o Acquire::http::Timeout=30
+  -o Acquire::https::Timeout=30
+  -o DPkg::Lock::Timeout=60
+  -o Dpkg::Options::=--force-confdef
+  -o Dpkg::Options::=--force-confold
+)
+
+log "Installing system dependencies (this can take a few minutes)"
+apt-get update "${APT_OPTS[@]}"
+apt-get install -y --no-install-recommends "${APT_OPTS[@]}" \
   ca-certificates curl git python3 python3-venv python3-pip \
-  ffmpeg xvfb xauth wget gnupg fonts-liberation >/dev/null
+  ffmpeg xvfb xauth wget gnupg fonts-liberation
 
 if ! command -v google-chrome >/dev/null 2>&1 && ! command -v google-chrome-stable >/dev/null 2>&1; then
   log "Installing Google Chrome"
@@ -38,8 +51,8 @@ if ! command -v google-chrome >/dev/null 2>&1 && ! command -v google-chrome-stab
   esac
   tmp_dir="$(mktemp -d)"
   trap 'rm -rf "$tmp_dir"' EXIT
-  wget -q -O "$tmp_dir/chrome.deb" "https://dl.google.com/linux/direct/google-chrome-stable_current_${chrome_arch}.deb"
-  apt-get install -y -qq "$tmp_dir/chrome.deb" >/dev/null
+  wget -O "$tmp_dir/chrome.deb" "https://dl.google.com/linux/direct/google-chrome-stable_current_${chrome_arch}.deb"
+  apt-get install -y "${APT_OPTS[@]}" "$tmp_dir/chrome.deb"
 fi
 
 log "Creating service user and data directories"
@@ -62,7 +75,7 @@ else
   git clone --branch "$BRANCH" "$REPO_URL" "$INSTALL_DIR"
 fi
 
-log "Installing Python environment"
+log "Installing Python environment (this can take a few minutes)"
 python_bin=""
 for candidate in python3.13 python3.12 python3; do
   if command -v "$candidate" >/dev/null 2>&1 \
@@ -90,9 +103,9 @@ else
   uv venv --seed --python 3.12 "$INSTALL_DIR/.venv"
 fi
 
-"$INSTALL_DIR/.venv/bin/pip" install --quiet --upgrade pip wheel
-"$INSTALL_DIR/.venv/bin/pip" install --quiet --upgrade -e "$INSTALL_DIR"
-"$INSTALL_DIR/.venv/bin/pip" install --quiet --upgrade -r "$INSTALL_DIR/web/requirements.txt"
+"$INSTALL_DIR/.venv/bin/pip" install --upgrade pip wheel
+"$INSTALL_DIR/.venv/bin/pip" install --upgrade -e "$INSTALL_DIR"
+"$INSTALL_DIR/.venv/bin/pip" install --upgrade -r "$INSTALL_DIR/web/requirements.txt"
 
 log "Writing configuration"
 if [[ ! -f "$ENV_FILE" ]]; then

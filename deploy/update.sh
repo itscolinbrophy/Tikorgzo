@@ -19,8 +19,8 @@ git -C "$INSTALL_DIR" fetch --all --prune
 git -C "$INSTALL_DIR" checkout "$BRANCH"
 git -C "$INSTALL_DIR" pull --ff-only origin "$BRANCH"
 
-"$INSTALL_DIR/.venv/bin/pip" install --quiet --upgrade -e "$INSTALL_DIR"
-"$INSTALL_DIR/.venv/bin/pip" install --quiet --upgrade -r "$INSTALL_DIR/web/requirements.txt"
+"$INSTALL_DIR/.venv/bin/pip" install --upgrade -e "$INSTALL_DIR"
+"$INSTALL_DIR/.venv/bin/pip" install --upgrade -r "$INSTALL_DIR/web/requirements.txt"
 
 systemctl restart "$SERVICE_NAME"
 echo "Updated and restarted $SERVICE_NAME."
